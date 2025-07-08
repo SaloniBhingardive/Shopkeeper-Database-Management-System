@@ -1,0 +1,148 @@
+<?php
+// Database connection
+$servername = "localhost";
+$username = "root";
+$password = "";
+$database = "shopkeeperdb";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $database);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Initialize variables
+$customerID = $date = $transactionID = $productID = $price = $quantity = "";
+$success_message = "";
+
+// Check if form is submitted
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Insert data into payment table
+    $customerID = isset($_POST["customerID"]) ? $_POST["customerID"] : "";
+    $date = isset($_POST["date"]) ? $_POST["date"] : "";
+    $transactionID = isset($_POST["transactionID"]) ? $_POST["transactionID"] : "";
+    $productID = isset($_POST["productID"]) ? $_POST["productID"] : "";
+    $price = isset($_POST["price"]) ? $_POST["price"] : "";
+    $quantity = isset($_POST["quantity"]) ? $_POST["quantity"] : "";
+
+    if (!empty($customerID) && !empty($date) && !empty($transactionID) && !empty($productID) && !empty($price) && !empty($quantity)) {
+        $sql = "INSERT INTO payment (CustomerID, Date, TransactionID, ProductID, Price, Quantity) 
+            VALUES ('$customerID', '$date', '$transactionID', '$productID', '$price', '$quantity')";
+
+        if ($conn->query($sql) === TRUE) {
+            $success_message = "New record inserted successfully";
+        } else {
+            $success_message = "Error: " . $sql . "<br>" . $conn->error;
+        }
+    } else {
+        $success_message = "Please fill in all fields";
+    }
+}
+
+// Check if View Payment Table button is clicked
+if (isset($_POST["view_table"])) {
+    // Retrieve data from the payment table
+    $sql = "SELECT * FROM payment";
+    $result = $conn->query($sql);
+
+    // Display the payment table
+    if ($result->num_rows > 0) {
+        echo "<h2>Payment Table</h2>";
+        echo "<table border='1'>";
+        echo "<tr><th>PaymentID</th><th>CustomerID</th><th>Date</th><th>TransactionID</th><th>ProductID</th><th>Price</th><th>Quantity</th></tr>";
+        while ($row = $result->fetch_assoc()) {
+            echo "<tr>";
+            echo "<td>" . $row["PaymentID"] . "</td>";
+            echo "<td>" . $row["CustomerID"] . "</td>";
+            echo "<td>" . $row["Date"] . "</td>";
+            echo "<td>" . $row["TransactionID"] . "</td>";
+            echo "<td>" . $row["ProductID"] . "</td>";
+            echo "<td>" . $row["Price"] . "</td>";
+            echo "<td>" . $row["Quantity"] . "</td>";
+            echo "</tr>";
+        }
+        echo "</table>";
+    } else {
+        echo "0 results";
+    }
+}
+
+// Close connection
+$conn->close();
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insert Payment Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: AliceBlue;
+        }
+        form {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"], input[type="number"], input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button[type="submit"], .back-button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button[type="submit"]:hover, .back-button:hover {
+            background-color: #45a049;
+        }
+        .success-message {
+            color: green;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+    <h2>Insert Payment Data</h2>
+    <?php if (!empty($success_message)) { ?>
+        <div class="success-message"><?php echo $success_message; ?></div>
+    <?php } ?>
+    <input type="number" name="customerID" placeholder="Customer ID" value="<?php echo $customerID; ?>" required><br>
+    <input type="date" name="date" placeholder="Date" value="<?php echo $date; ?>" required><br>
+    <input type="text" name="transactionID" placeholder="Transaction ID" value="<?php echo $transactionID; ?>" required><br>
+    <input type="number" name="productID" placeholder="Product ID" value="<?php echo $productID; ?>" required><br>
+    <input type="number" step="0.01" name="price" placeholder="Price" value="<?php echo $price; ?>" required><br>
+    <input type="number" name="quantity" placeholder="Quantity" value="<?php echo $quantity; ?>" required><br>
+    <button type="submit">Insert Data</button>
+</form>
+
+<form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+    <button type="submit" name="view_table">View Payment Table</button>
+</form>
+
+<form action="INTERFACE.php" method="get">
+    <button type="submit" class="back-button">Back to Interface</button>
+</form>
+
+</body>
+</html>
